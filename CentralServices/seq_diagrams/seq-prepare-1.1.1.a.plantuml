@@ -93,7 +93,7 @@ group Prepare Handler Consume
         PREP_HANDLER <-> PREP_HANDLER: Validate message signature (to be confirmed in future requirement)
     end
     alt Validate Prepare Transfer (success)
-        group Persist Transfer State (with transferState='RECEIVED' on validation pass)
+        group Persist Transfer State (with transferState='RECEIVED-PREPARE' on validation pass)
             PREP_HANDLER -> TRANS_DAO: Request to persist transfer
             activate TRANS_DAO
             TRANS_DAO -> DB: Persist transfer
