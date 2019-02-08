@@ -37,7 +37,7 @@ autonumber
 collections "Fulfil-Topic" as TOPIC_FULFIL
 control "Fulfil Event Handler" as FULF_HANDLER
 collections "Event-Topic" as TOPIC_EVENT
-collections "Position-Topic-dfsp2" as TOPIC_POSITION_DFSP2
+collections "topic-transfer-position" as TOPIC_TRANSFER_POSITION
 collections "Notification-Topic" as TOPIC_NOTIFICATIONS
 'entity "Transfer Duplicate Facade" as DUP_FACADE
 entity "Transfer DAO" as TRANS_DAO
@@ -45,7 +45,7 @@ database "Central Store" as DB
 box "Central Service" #LightYellow
     participant TOPIC_FULFIL
     participant FULF_HANDLER
-    participant TOPIC_POSITION_DFSP2
+    participant TOPIC_TRANSFER_POSITION
     participant TOPIC_EVENT
     participant TOPIC_NOTIFICATIONS
     participant TRANS_DAO
@@ -65,11 +65,11 @@ group Fulfil Handler Consume (Success)
         end
         group Persist Event Information
             FULF_HANDLER -> TOPIC_EVENT: Publish event information
-            ref over FULF_HANDLER, TOPIC_EVENT:  Event Handler Consume {[[https://github.com/mojaloop/docs/blob/develop/CentralServices/seq_diagrams/seq-event-9.1.0.svg 9.1.0.]]}
+            ref over FULF_HANDLER, TOPIC_EVENT:  Event Handler Consume {[[https://github.com/mojaloop/docs/blob/master/CentralServices/seq_diagrams/seq-event-9.1.0.svg 9.1.0.]]}
         end
         group Validate FSPIOP-Signature
             |||
-            ref over FULF_HANDLER, TOPIC_NOTIFICATIONS: Validate message.content.headers.**FSPIOP-Signature** {[[https://github.com/mojaloop/docs/blob/develop/CentralServices/seq_diagrams/seq-signature-validation.svg seq-signature-validation]]} \n<color #FF0000><b>Error codes:</b> 3105/3106</color>
+            ref over FULF_HANDLER, TOPIC_NOTIFICATIONS: Validate message.content.headers.**FSPIOP-Signature** {[[https://github.com/mojaloop/docs/blob/master/CentralServices/seq_diagrams/seq-signature-validation.svg seq-signature-validation]]} \n<color #FF0000><b>Error codes:</b> 3105/3106</color>
         end
         group Validate Transfer Fulfilment Duplicate Check
             FULF_HANDLER -> FULF_HANDLER: Generate transferFulfilmentId uuid
@@ -89,7 +89,7 @@ group Fulfil Handler Consume (Success)
             FULF_HANDLER -> FULF_HANDLER: Loop the list of returned hashes and compare each entry with the calculated message hash
             alt Hash matched
                 ' Need to check what respond with same results if finalised then resend, else ignore and wait for response
-                FULF_HANDLER -> TOPIC_EVENT: Publish event information (for duplicate) ( Event Handler Consume {[[https://github.com/mojaloop/docs/blob/develop/CentralServices/seq_diagrams/seq-event-9.1.0.svg 9.1.0]]} )
+                FULF_HANDLER -> TOPIC_EVENT: Publish event information (for duplicate) ( Event Handler Consume {[[https://github.com/mojaloop/docs/blob/master/CentralServices/seq_diagrams/seq-event-9.1.0.svg 9.1.0]]} )
                 FULF_HANDLER -> TRANS_DAO: Request to retrieve Transfer Fulfilment and Transfer state\n<color #FF0000><b>Error code:</b> 2003</color>
                 activate TRANS_DAO
                 TRANS_DAO -> DB: Request to retrieve Transfer Fulfilment and Transfer state
@@ -108,7 +108,7 @@ group Fulfil Handler Consume (Success)
                     end
                 else transferState IN ['COMMITTED', 'ABORTED']
                     break
-                        ref over FULF_HANDLER, TOPIC_NOTIFICATIONS: Send notification to Participant (Payee) {[[https://github.com/mojaloop/docs/blob/develop/CentralServices/seq_diagrams/seq-prepare-1.1.4.a.svg 1.1.4.a.]]} \n
+                        ref over FULF_HANDLER, TOPIC_NOTIFICATIONS: Send notification to Participant (Payee) {[[https://github.com/mojaloop/docs/blob/master/CentralServices/seq_diagrams/seq-prepare-1.1.4.a.svg 1.1.4.a.]]} \n
                     end
                 else transferState NOT 'RESERVED'
                     break
@@ -218,9 +218,9 @@ group Fulfil Handler Consume (Success)
                         }
                     }
                 end note
-                FULF_HANDLER -> TOPIC_POSITION_DFSP2: Route & Publish Position event for Payee
-                activate TOPIC_POSITION_DFSP2
-                deactivate TOPIC_POSITION_DFSP2
+                FULF_HANDLER -> TOPIC_TRANSFER_POSITION: Route & Publish Position event for Payee
+                activate TOPIC_TRANSFER_POSITION
+                deactivate TOPIC_TRANSFER_POSITION
             else Validate Fulfil Transfer not successful
                 break
                     FULF_HANDLER -> TOPIC_NOTIFICATIONS: Route & Publish Notification event for Payee
